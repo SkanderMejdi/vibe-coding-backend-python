@@ -1,5 +1,5 @@
 ---
-description: Clarify requirements through conversation. Output is a clear spec. FIRST STEP for any new feature.
+description: "Backend: clarify requirements → spec. Reads BFF contract as input if it exists."
 allowed-tools: Read, Grep, Bash, grepai
 ---
 
@@ -85,4 +85,4 @@ Create `.claude/temp/spec.md`:
 
 > Spec écrite dans `.claude/temp/spec.md`
 >
-> Prochaine étape : `/clear` puis `/specify`
+> Prochaine étape : `/clear` puis `/back-specify`

@@ -1,5 +1,5 @@
 ---
-description: Improve code without changing behavior. Tests must stay green. Optional.
+description: "Backend: improve code without changing behavior. Tests must stay green. Optional."
 allowed-tools: Read, Write, Edit, Bash, Grep, grepai
 ---
 

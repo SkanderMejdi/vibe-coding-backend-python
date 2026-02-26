@@ -1,5 +1,5 @@
 ---
-description: Generate tests from spec. Tests MUST fail. Run after /clarify.
+description: "Backend: generate tests from spec. Tests MUST fail. Run after /back-clarify."
 allowed-tools: Read, Write, Bash, grepai
 ---
 
@@ -21,7 +21,7 @@ If no Makefile, stop and ask:
 cat .claude/temp/spec.md
 ```
 
-If no spec, stop: "Pas de spec. Lance `/clarify` d'abord."
+If no spec, stop: "Pas de spec. Lance `/back-clarify` d'abord."
 
 Check for BFF contract referenced in the spec:
 
@@ -131,4 +131,4 @@ make test 2>&1 | tail -20
 
 > Tests créés. Ils échouent (normal).
 >
-> Prochaine étape : `/clear` puis `/implement`
+> Prochaine étape : `/clear` puis `/back-implement`

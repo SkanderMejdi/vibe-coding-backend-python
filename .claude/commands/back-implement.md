@@ -1,5 +1,5 @@
 ---
-description: Write minimal code to make tests pass. Run after /specify.
+description: "Backend: write minimal code to make tests pass. Run after /back-specify."
 allowed-tools: Read, Write, Edit, Bash, Grep, grepai
 ---
 
@@ -107,7 +107,30 @@ If doubt:
 > [describe what code does]
 > C'est bien ça ?
 
-## Step 10: Done
+## Step 10: Seeders (if needed)
+
+If the endpoint needs data to be testable manually (dev environment), check if seeders exist:
+
+```bash
+grepai search "seed data or seeders" --json --compact 2>/dev/null || grep -rn "seed\|fixture" scripts/ src/ --include="*.py" | head -10
+```
+
+If no seeder exists for the entities involved, create one in `scripts/seed/`:
+
+```bash
+mkdir -p scripts/seed
+```
+
+Create `scripts/seed/{entity}.py` with **realistic domain data** (same vocabulary as the mockups and contract). The seeder should:
+- Be idempotent (safe to run multiple times)
+- Use the repository implementations directly
+- Create enough data to exercise all states from the flow spec
+
+Add a `make seed` target to the Makefile if it doesn't exist.
+
+**Only create seeders if the feature needs data to be usable.** Pure stateless endpoints don't need seeders.
+
+## Step 11: Done
 
 > Implémentation terminée. Tests passent.
 >
@@ -116,5 +139,6 @@ If doubt:
 >
 > Endpoint : `{METHOD} /api/{resource}` (si applicable)
 > Contract check : ✅ (si BFF)
+> Seeder : `scripts/seed/{entity}.py` (si applicable)
 >
-> Tu peux `git commit` ou `/clear` puis `/refactor` si besoin.
+> Tu peux `git commit` ou `/clear` puis `/back-refactor` si besoin.
