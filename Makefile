@@ -1,4 +1,4 @@
-.PHONY: test test-quick lint typecheck format openapi
+.PHONY: test test-quick lint typecheck format openapi check-contract
 
 # Run tests (downgrade → migrate → pytest)
 test:
@@ -30,3 +30,7 @@ format:
 openapi:
 	docker compose -f docker-compose.test.yml run --rm backend python -c \
 		"import yaml; from src.infrastructure.api.app import app; print(yaml.dump(app.openapi(), sort_keys=False))" > openapi.yaml
+
+# Check BFF contracts against generated OpenAPI
+check-contract: openapi
+	docker compose -f docker-compose.test.yml run --rm backend python scripts/check_contract.py

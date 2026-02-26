@@ -38,5 +38,19 @@ if [ $status -ne 0 ]; then
     exit 1
 fi
 
+# Contract check (only if specs/api/ exists)
+if [ -d "specs/api" ] && ls specs/api/*.yml specs/api/*.yaml 2>/dev/null | grep -q .; then
+    output=$(make check-contract 2>&1)
+    status=$?
+
+    if [ $status -ne 0 ]; then
+        echo "=================================="
+        echo "❌ Contract check failed. Commit blocked."
+        echo "=================================="
+        echo "$output"
+        exit 1
+    fi
+fi
+
 # Success: silent
 exit 0

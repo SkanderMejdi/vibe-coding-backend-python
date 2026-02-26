@@ -166,11 +166,16 @@ def main():
         file_path = tool_input.get("file_path") or tool_input.get("path", "")
         content = tool_input.get("content") or tool_input.get("file_text", "")
 
+        new_string = tool_input.get("new_string", "")
+
         # Only check Python files
         if not file_path.endswith(".py"):
             sys.exit(0)
 
-        # Skip if no content (edit operations)
+        # For Edit operations, check new_string for import violations
+        if not content and new_string:
+            content = new_string
+
         if not content:
             sys.exit(0)
 
