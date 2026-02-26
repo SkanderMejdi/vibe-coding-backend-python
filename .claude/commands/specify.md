@@ -15,7 +15,7 @@ If no Makefile, stop and ask:
 > Pas de Makefile trouvé. Comment lances-tu les tests ?
 > Je peux générer un Makefile si tu me dis quelle commande utiliser (docker, python, etc.)
 
-## Step 2: Read spec
+## Step 2: Read spec and contract
 
 ```bash
 cat .claude/temp/spec.md
@@ -23,11 +23,19 @@ cat .claude/temp/spec.md
 
 If no spec, stop: "Pas de spec. Lance `/clarify` d'abord."
 
+Check for BFF contract referenced in the spec:
+
+```bash
+ls specs/api/*.yml specs/api/*.yaml 2>/dev/null && cat specs/api/*.yml 2>/dev/null
+```
+
 ## Step 3: List test cases
 
 From the spec, identify:
 - **Success cases** - conditions met → expected outcome
 - **Failure cases** - conditions not met → expected error
+
+**Focus on business logic**: rules, calculations, state transitions, data aggregation. NOT on HTTP response formatting — that's validated by `make check-contract`.
 
 ## Step 4: Verify with user
 
@@ -69,6 +77,12 @@ Reuse existing fixtures. Create new builders in `tests/helpers/` if needed.
 When possible, assert on **observable behavior** (results, side effects, errors) rather than internal details (which method was called, in what order). This makes tests more resilient to refactors.
 
 That said, complex business logic sometimes requires detailed unit tests that are tightly coupled to implementation — that's fine when the logic justifies it.
+
+### Don't test response formatting
+
+The BFF contract (`specs/api/*.yml`) defines the response shape. `make check-contract` validates that the generated OpenAPI matches the contract. **Don't write integration tests for field names, JSON structure, or HTTP formatting** — the contract check covers that.
+
+Test the **handler output** (business data is correct), not the **endpoint output** (JSON shape is correct).
 
 ### Test template
 

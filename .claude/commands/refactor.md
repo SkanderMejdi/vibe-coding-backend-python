@@ -65,9 +65,18 @@ make test
 
 All tests must still pass.
 
+Also verify BFF contracts if applicable:
+
+```bash
+ls specs/api/*.yml specs/api/*.yaml 2>/dev/null && make check-contract 2>&1 | tail -20 || true
+```
+
+**Refactoring must not break the API contract.**
+
 ## Step 6: Done
 
 > Refactoring terminé. Tests toujours verts.
+> Contract check : ✅ (si BFF)
 >
 > Changements :
 > - {list}

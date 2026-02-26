@@ -19,10 +19,14 @@ If no Makefile, stop and ask how to run tests.
 make test 2>&1 | tail -30
 ```
 
-## Step 3: Read spec for context
+## Step 3: Read spec and contract for context
 
 ```bash
 cat .claude/temp/spec.md 2>/dev/null || echo "No spec"
+```
+
+```bash
+ls specs/api/*.yml specs/api/*.yaml 2>/dev/null && cat specs/api/*.yml 2>/dev/null || echo "No BFF contract"
 ```
 
 ## Step 4: Find related code
@@ -66,6 +70,7 @@ grepai search "API routes or endpoint registration" --json --compact 2>/dev/null
 2. Create or update the endpoint in `src/infrastructure/api/`:
    - Route calls the handler (dependency injection via FastAPI `Depends` or manual wiring)
    - Request/Response models (Pydantic) in the same file or next to it
+   - **If a BFF contract exists**: the Pydantic response model MUST match the contract schema (same field names, types, required fields)
    - Proper HTTP status codes (201 for creation, 204 for deletion, etc.)
 
 3. Inform the user:
@@ -75,7 +80,22 @@ grepai search "API routes or endpoint registration" --json --compact 2>/dev/null
 
 **If unsure whether an endpoint is needed, ask.**
 
-## Step 8: Verify intent
+## Step 8: Verify contract
+
+If a BFF contract exists in `specs/api/`:
+
+```bash
+make check-contract 2>&1 | tail -20
+```
+
+**Contract MUST pass.** If it fails:
+- Missing field → add it to the Pydantic response model
+- Type mismatch → fix the response model type
+- Missing required → add the field to the model (not Optional)
+
+**Do NOT modify the contract to match the code. Fix the code to match the contract.**
+
+## Step 9: Verify intent
 
 Re-read the spec. Ask yourself:
 - Does the code do what the user wanted?
@@ -87,7 +107,7 @@ If doubt:
 > [describe what code does]
 > C'est bien ça ?
 
-## Step 9: Done
+## Step 10: Done
 
 > Implémentation terminée. Tests passent.
 >
@@ -95,5 +115,6 @@ If doubt:
 > - {list}
 >
 > Endpoint : `{METHOD} /api/{resource}` (si applicable)
+> Contract check : ✅ (si BFF)
 >
 > Tu peux `git commit` ou `/clear` puis `/refactor` si besoin.
