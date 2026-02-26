@@ -22,23 +22,54 @@ If no Makefile exists, ask the user how to run tests and propose to generate one
 
 ## Commands
 
+### Backend (domain + BFF endpoints)
+
 | Command | Role |
 |---------|------|
-| `/clarify` | Clarify need through conversation → spec |
-| `/specify` | Spec → tests (must fail) |
-| `/implement` | Tests → minimal code (must pass) |
-| `/refactor` | Improve code (tests stay green) |
+| `/back-clarify` | Clarify backend need → spec (reads BFF contract as input) |
+| `/back-specify` | Spec → tests (must fail) |
+| `/back-implement` | Tests → minimal code (must pass) + seeders |
+| `/back-refactor` | Improve code (tests stay green) |
+
+### Frontend (UX + BFF contract)
+
+| Command | Role |
+|---------|------|
+| `/front-clarify` | Clarify user flows → `specs/flows/{page}.md` with scenario diagram |
+| `/front-maquette` | Flow → static mockups per state (hardcoded data, `frontend-design`) |
+| `/front-contract` | Mockups → OpenAPI contract in `specs/api/{page}-view.yml` |
+| `/front-dynamize` | Connect mockups to real API endpoints |
+| `/front-refactor` | Design system coherence, component extraction |
+
+### Utility
+
+| Command | Role |
+|---------|------|
 | `/clear` | Reset context between phases (built-in Claude Code command) |
 
 ## Flow
 
+### Backend flow
+
 ```
-/clarify {feature}  →  conversation  →  .claude/temp/spec.md
+/back-clarify {feature}  →  conversation  →  .claude/temp/spec.md
 /clear
-/specify            →  read spec     →  tests (red)
+/back-specify             →  read spec     →  tests (red)
 /clear
-/implement          →  read tests    →  code (green)
-git commit          →  hook: make test-quick + lint + typecheck
+/back-implement           →  read tests    →  code (green) + make check-contract
+git commit                →  hook: make test-quick + lint + typecheck + check-contract
+```
+
+### Frontend BFF flow
+
+```
+/front-clarify {page}     →  conversation  →  specs/flows/{page}.md
+/clear
+/front-maquette {page}    →  read flow     →  maquettes/{page}/{page}--{état}.vue
+/clear
+/front-contract {page}    →  read mockups  →  specs/api/{page}-view.yml
+    ↓ (back implements)
+/front-dynamize {page}    →  read contract →  real component (replaces mockups)
 ```
 
 ## Git Workflow
@@ -48,11 +79,11 @@ A **pre-commit hook** runs automatically and blocks the commit if any check fail
 - `make lint` — code must be properly formatted
 - `make typecheck` — no type errors
 
-If you created or modified an API endpoint, run `make openapi` before committing to regenerate the OpenAPI spec.
+If you created or modified an API endpoint, run `make openapi` before committing to regenerate the OpenAPI spec. If BFF contracts exist in `specs/api/`, `make check-contract` runs automatically in the pre-commit hook.
 
 **You don't need to run all these checks before every commit.** But be aware they will run. Write clean code from the start: correct types, proper formatting, passing tests. When you suspect a check might fail (complex refactor, new types, unfamiliar patterns), run the relevant `make` command proactively to catch issues early rather than discovering them at commit time.
 
-Commit often: after each `/implement` or `/refactor` cycle.
+Commit often: after each `/back-implement` or `/back-refactor` cycle.
 
 ## Architecture
 
