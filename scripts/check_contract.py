@@ -41,9 +41,14 @@ def resolve_ref(ref: str, root: dict) -> dict:
 
 
 def resolve_schema(schema: dict, root: dict) -> dict:
-    """Recursively resolve $ref in a schema."""
+    """Recursively resolve $ref and anyOf (nullable pattern) in a schema."""
     if "$ref" in schema:
         return resolve_schema(resolve_ref(schema["$ref"], root), root)
+    # FastAPI nullable pattern: anyOf: [{$ref or type: object}, {type: null}]
+    if "anyOf" in schema:
+        non_null = [s for s in schema["anyOf"] if s.get("type") != "null"]
+        if len(non_null) == 1:
+            return resolve_schema(non_null[0], root)
     return schema
 
 
@@ -148,8 +153,12 @@ def check_contract(contract_path: Path, generated: dict) -> list[str]:
             gen_operation = generated_paths[path_key][method]
 
             # Check response schemas
+            # YAML parses bare 200: as int, but OpenAPI generators use "200" strings
+            gen_responses = gen_operation.get("responses", {})
+            gen_responses_str = {str(k): v for k, v in gen_responses.items()}
             for status_code, response in operation.get("responses", {}).items():
-                if status_code not in gen_operation.get("responses", {}):
+                sc = str(status_code)
+                if sc not in gen_responses_str:
                     errors.append(
                         f"[{contract_name}] {method.upper()} {path_key} "
                         f"response {status_code} missing in generated"
@@ -158,11 +167,7 @@ def check_contract(contract_path: Path, generated: dict) -> list[str]:
 
                 # Compare response schema
                 c_content = response.get("content", {})
-                g_content = (
-                    gen_operation.get("responses", {})
-                    .get(status_code, {})
-                    .get("content", {})
-                )
+                g_content = gen_responses_str[sc].get("content", {})
 
                 for media_type, c_media in c_content.items():
                     if media_type not in g_content:
