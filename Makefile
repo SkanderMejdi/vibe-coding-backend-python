@@ -14,7 +14,6 @@ test-quick:
 lint:
 	docker compose -f docker-compose.test.yml run --rm backend ruff check src/ tests/
 	docker compose -f docker-compose.test.yml run --rm backend black --check src/ tests/
-	docker compose -f docker-compose.test.yml run --rm backend isort --check src/ tests/
 
 # Type check
 typecheck:
@@ -24,7 +23,6 @@ typecheck:
 format:
 	docker compose -f docker-compose.test.yml run --rm backend ruff check --fix src/ tests/
 	docker compose -f docker-compose.test.yml run --rm backend black src/ tests/
-	docker compose -f docker-compose.test.yml run --rm backend isort src/ tests/
 
 # Generate OpenAPI spec from FastAPI app
 openapi:
