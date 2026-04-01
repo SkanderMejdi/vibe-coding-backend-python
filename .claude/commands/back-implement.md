@@ -5,6 +5,16 @@ allowed-tools: Read, Write, Edit, Bash, Grep, grepai
 
 # Implement
 
+## HARD RULES — NO EXCEPTIONS
+
+**You MUST follow these rules. Violating any of them is a blocking failure.**
+
+1. **NEVER disable or bypass hooks** — no `--no-verify`, no commenting out hook config, no skipping pre-commit checks
+2. **NEVER bypass architecture constraints** — domain MUST NOT import infrastructure or application. If the architecture hook blocks you, your code is wrong. Fix the code, not the hook.
+3. **NEVER ignore lint/type errors** — no `# type: ignore` unless there is a genuine mypy bug (explain why in a comment). No `# noqa` unless the rule is genuinely wrong for this line. No `# pragma: no cover` on code that should be tested.
+4. **NEVER use workarounds to make checks pass** — if `make lint` fails, fix the code. If `make typecheck` fails, fix the types. If `make check-contract` fails, fix the response model. Do not game the system.
+5. **Write EXPLICIT code** — no magic, no implicit behavior, no "clever" tricks. Every variable has a clear name. Every function does one thing. Every branch is visible. Prefer verbose and obvious over short and cryptic.
+
 ## Step 1: Check Makefile
 
 ```bash
@@ -32,7 +42,15 @@ ls specs/api/*.yml specs/api/*.yaml 2>/dev/null && cat specs/api/*.yml 2>/dev/nu
 ## Step 4: Find related code
 
 ```bash
-grepai search "related concepts" 2>/dev/null | head -10 || true
+grepai search "related concepts" --json --compact 2>/dev/null | head -10 || true
+```
+
+Check existing code identified in the spec:
+
+```bash
+# Read existing entities, rules, repos mentioned in spec
+grep -rn "class " src/domain/ --include="*.py" | head -20
+grep -rn "class " src/application/ --include="*.py" | head -20
 ```
 
 ## Step 5: Implement domain + application
@@ -45,6 +63,15 @@ Follow architecture:
 - Repository → `src/domain/{entity}/{entity}_repository.py` (Protocol)
 - Handler → `src/application/{entity}/{action}_{entity}/handler.py`
 
+### Code quality requirements
+
+- **Explicit naming**: `calculate_total_price` not `calc`, `is_order_cancellable` not `check`
+- **No abbreviations** in public APIs: `quantity` not `qty`, `description` not `desc`
+- **Type everything**: all function signatures, all variables where the type isn't obvious from the assignment
+- **One responsibility per function**: if a function has "and" in its description, split it
+- **Visible flow**: handler steps (VALIDATE → FETCH → RULES → PERSIST → EVENTS) must be readable top-to-bottom without jumping to base classes
+- **Reuse existing code**: if the spec mentions existing entities/rules/repos, import and use them. Do NOT duplicate.
+
 ## Step 6: Run tests
 
 ```bash
@@ -55,7 +82,21 @@ make test 2>&1 | tail -30
 
 If tests fail → fix code, not tests.
 
-## Step 7: Implement API endpoint
+## Step 7: Run ALL checks proactively
+
+**Do not wait for the pre-commit hook to catch issues. Run checks NOW:**
+
+```bash
+make lint 2>&1 | tail -20
+```
+
+```bash
+make typecheck 2>&1 | tail -20
+```
+
+**Fix any issue immediately.** Do not proceed with lint or type errors.
+
+## Step 8: Implement API endpoint
 
 **Tests don't cover HTTP endpoints, but the frontend needs them to work.**
 
@@ -80,7 +121,7 @@ grepai search "API routes or endpoint registration" --json --compact 2>/dev/null
 
 **If unsure whether an endpoint is needed, ask.**
 
-## Step 8: Verify contract
+## Step 9: Verify contract
 
 If a BFF contract exists in `specs/api/`:
 
@@ -95,7 +136,7 @@ make check-contract 2>&1 | tail -20
 
 **Do NOT modify the contract to match the code. Fix the code to match the contract.**
 
-## Step 9: Verify intent
+## Step 10: Verify intent
 
 Re-read the spec. Ask yourself:
 - Does the code do what the user wanted?
@@ -107,7 +148,7 @@ If doubt:
 > [describe what code does]
 > C'est bien ça ?
 
-## Step 10: Seeders (if needed)
+## Step 11: Seeders (if needed)
 
 If the endpoint needs data to be testable manually (dev environment), check if seeders exist:
 
@@ -130,15 +171,20 @@ Add a `make seed` target to the Makefile if it doesn't exist.
 
 **Only create seeders if the feature needs data to be usable.** Pure stateless endpoints don't need seeders.
 
-## Step 11: Done
+## Step 12: Done
 
 > Implémentation terminée. Tests passent.
 >
 > Fichiers créés :
 > - {list}
 >
+> Checks :
+> - ✅ `make test` — all pass
+> - ✅ `make lint` — clean
+> - ✅ `make typecheck` — no errors
+> - ✅ `make check-contract` — matches (si BFF)
+>
 > Endpoint : `{METHOD} /api/{resource}` (si applicable)
-> Contract check : ✅ (si BFF)
 > Seeder : `scripts/seed/{entity}.py` (si applicable)
 >
 > Tu peux `git commit` ou `/clear` puis `/back-refactor` si besoin.

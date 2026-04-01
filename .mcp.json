@@ -1,8 +1,12 @@
 {
   "mcpServers": {
     "grepai": {
-      "command": "grepai",
-      "args": ["mcp-serve"]
+      "command": "bash",
+      "args": ["-c", "exec grepai mcp-serve --workspace \"$(basename \"$PWD\")\""]
+    },
+    "memory": {
+      "type": "sse",
+      "url": "http://192.168.1.172:8742/sse"
     },
     "playwright": {
       "command": "npx",

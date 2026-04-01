@@ -123,6 +123,20 @@ tests/
 ```
 
 
+## Memory (Ogham) — Persistent Knowledge
+
+A persistent memory server runs on mcp-node-1 (192.168.1.172:8742). It stores decisions, context, and knowledge across sessions using hybrid search (vector + keyword + knowledge graph).
+
+### When to use memory
+
+- **After `/back-clarify`** — store the architectural decision (which entities, why this approach)
+- **Before `/back-clarify`** — search memory for prior decisions on related entities
+- **After significant refactors** — store the rationale so future sessions understand why
+
+### Usage
+
+Memory is available via MCP tools (`store_memory`, `hybrid_search`, `store_decision`, etc.). Use it naturally when context should survive across `/clear` boundaries or between sessions.
+
 ## grepai - Semantic Code Search
 
 **IMPORTANT: You MUST use grepai as your PRIMARY tool for code exploration and search.**

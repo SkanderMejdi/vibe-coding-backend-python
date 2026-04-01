@@ -15,12 +15,21 @@ grepai watch  # Lance l'indexation continue en arrière-plan
 claude
 ```
 
-## grepai
+## grepai + mcp-node-1
 
-`grepai` indexe le code en continu et permet à Claude de faire de la recherche sémantique (par intention) plutôt que par texte exact. Ça économise des tokens et donne de meilleurs résultats.
+`grepai` indexe le code en continu et permet à Claude de faire de la recherche sémantique (par intention) plutôt que par texte exact. Le backend (PostgreSQL + Ollama) tourne sur mcp-node-1 (192.168.1.172).
 
-- `grepai init` : crée l'index initial du projet
-- `grepai watch` : surveille les changements et met à jour l'index en continu (à lancer dans un terminal dédié ou en background avec `grepai watch &`)
+Le hook `SessionStart` crée automatiquement le workspace et lance le watcher. Prérequis :
+
+```bash
+# Une seule fois : exporter le mot de passe PostgreSQL de mcp-node-1
+export GREPAI_POSTGRES_PASSWORD=<password>
+# (ajouter dans ~/.bashrc ou ~/.config/fish/config.fish)
+```
+
+## Memory (Ogham)
+
+Mémoire persistante sur mcp-node-1 — stocke les décisions architecturales et le contexte entre sessions. Configuré automatiquement via `.mcp.json`.
 
 ## Philosophie
 

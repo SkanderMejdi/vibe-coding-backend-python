@@ -1,11 +1,11 @@
 ---
-description: "Frontend: create static mockups per state from flow spec. Hardcoded data, no fetch. Phase 2 BFF."
+description: "Frontend: create static mockups per state from flow spec. Integrates into existing codebase. Hardcoded data on new elements. Phase 2 BFF."
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 
 # Front Maquette: $ARGUMENTS
 
-**IMPORTANT: Always use the `frontend-design` skill for every mockup. Design quality is not optional — it's central to this phase.**
+**CRITICAL: You MUST use the `frontend-design` skill for EVERY generation and EVERY iteration. No exception. Design quality is central to this phase. If you are about to write or edit a Vue file without invoking `frontend-design`, STOP and invoke it first.**
 
 ## Step 1: Read flow spec
 
@@ -15,7 +15,34 @@ cat specs/flows/$ARGUMENTS.md 2>/dev/null || echo "NO_FLOW"
 
 If no flow spec, stop: "Pas de flux. Lance `/front-clarify {page}` d'abord."
 
-## Step 2: Identify states to mock
+## Step 2: Analyze existing codebase
+
+Before creating anything, understand the existing project structure:
+
+```bash
+# Existing layouts
+find src/ -name "*layout*" -o -name "*Layout*" 2>/dev/null | head -20
+ls src/layouts/ 2>/dev/null || ls src/components/layouts/ 2>/dev/null || true
+
+# Existing router
+find src/ -name "router*" -o -name "routes*" 2>/dev/null | head -10
+cat src/router/index.* 2>/dev/null || cat src/router.* 2>/dev/null | head -40 || true
+
+# Existing components (design system)
+ls src/components/ 2>/dev/null | head -30
+find src/components/ -name "*.vue" 2>/dev/null | head -30
+
+# Existing pages for structure reference
+find src/pages/ src/views/ -name "*.vue" 2>/dev/null | head -20
+```
+
+Identify:
+- **Layout(s)** to reuse (sidebar, header, navigation, etc.)
+- **Shared components** to reuse (buttons, cards, tables, modals, form inputs, etc.)
+- **Router structure** to follow (naming convention, nesting, guards)
+- **Design tokens / CSS variables** in use (colors, spacing, typography)
+
+## Step 3: Identify states to mock
 
 From the scenario diagram, extract the **distinct visual states** the user can see. Each leaf/outcome in the diagram is a potential mockup.
 
@@ -29,7 +56,7 @@ From the scenario diagram, extract the **distinct visual states** the user can s
 
 **Wait for user direction** (or propose starting with the main/default state).
 
-## Step 3: Design conversation
+## Step 4: Design conversation
 
 Before coding, **discuss the UX with the user**. This is a creative conversation, not just implementation:
 
@@ -42,52 +69,69 @@ L'objectif : une UX **fluide, adaptée au métier, presque addictive**. Pas un f
 
 **Carry this design vision across ALL mockups.**
 
-## Step 4: Create mockup with frontend-design
+## Step 5: Create mockup with frontend-design — INSIDE the existing app
 
-```bash
-mkdir -p maquettes/{page}
-```
+**MANDATORY: Invoke `frontend-design` skill NOW.** Every mockup generation must go through `frontend-design`.
 
-**Invoke `frontend-design` for EVERY mockup.** The design must be distinctive, polished, and adapted to the domain.
+### Integration rules
 
-Check existing components for design consistency:
+Mockups are integrated into the existing app, NOT isolated in a `maquettes/` folder:
 
-```bash
-ls maquettes/components/ 2>/dev/null
-```
+1. **Use existing layout(s)** — the mockup page wraps inside the app's main layout (sidebar, header, nav). Do NOT recreate layout chrome.
+2. **Use existing shared components** — buttons, cards, tables, inputs, modals from the design system. Only create new components if nothing existing fits.
+3. **Add a temporary route** in the router:
+   ```
+   /maquette/{page}--{état}
+   ```
+   Mark it with a comment: `// MAQUETTE — temporary route, remove after /front-dynamize`
+4. **Place files in the real pages/views directory** with a clear maquette prefix:
+   - `src/views/maquettes/{page}/{Page}{État}.vue` or
+   - `src/pages/maquettes/{page}/{Page}{État}.vue`
+   (follow the project's existing convention for pages vs views)
 
-### Rules
+### Data rules for NEW elements
 
-- **Valeurs en dur** — pas de fetch, pas de mock, pas de store, pas de props dynamiques
+- **Valeurs en dur sur les nouveaux éléments** — pas de fetch, pas de mock, pas de store, pas de props dynamiques. Les éléments spécifiques à cette maquette utilisent des données hardcodées.
 - **Données réalistes du métier** — utiliser des vraies valeurs métier (noms de recettes, poids en grammes, vrais prix), pas "Lorem ipsum"
 - **Un fichier = un état** — chaque état est autonome et complet visuellement
-- **Design cohérent** — même direction artistique sur tous les états
+- **Design cohérent** — même direction artistique sur tous les états, cohérent avec l'existant
 
-Output: `maquettes/{page}/{page}--{état}.vue`
+### Existing elements are REAL
 
-## Step 5: Iterate on design
+- Existing layout, navigation, shared components work normally — they are NOT mocked
+- Only the new page-specific content uses hardcoded data
 
-After creating the mockup, take a screenshot and iterate:
+## Step 6: Validate with user — ONE PAGE AT A TIME
 
-> Maquette créée : `maquettes/{page}/{page}--{état}.vue`
+After creating EACH mockup state, **stop and validate with the user before moving to the next**:
+
+> Maquette créée : `{file_path}`
 >
-> Qu'est-ce que tu en penses ? On ajuste quoi ?
+> Route temporaire : `/maquette/{page}--{état}`
+>
+> Composants existants réutilisés : {list}
+>
+> **Qu'est-ce que tu en penses ? On ajuste avant de passer à l'état suivant ?**
 
-**Iterate on both UX and visual design until the user is satisfied.** The mockup should feel like the real app, not a wireframe.
+**MANDATORY: Use `frontend-design` for every iteration/adjustment too.** Do not skip it even for "small" fixes.
 
-Continue to use `frontend-design` on each iteration.
+**Do NOT proceed to the next state until the user explicitly validates the current one.**
 
-## Step 6: Factorize shared components
+## Step 7: Factorize shared components
 
-If patterns repeat across mockups, extract shared components to `maquettes/components/`.
+If patterns repeat across mockups, extract shared components into the project's real component directory (NOT a separate maquettes/components folder).
 
 **Only factorize when asked or when the duplication is obvious.**
 
-## Step 7: Next step
+## Step 8: Next step
 
 > Maquettes terminées pour {page} :
-> - `{page}--{état1}.vue`
-> - `{page}--{état2}.vue`
+> - `{état1}` — ✅ validé
+> - `{état2}` — ✅ validé
 > ...
+>
+> Routes temporaires ajoutées : `/maquette/{page}--*`
+> Composants existants réutilisés : {list}
+> Nouveaux composants créés : {list or "aucun"}
 >
 > Prochaine étape : `/clear` puis `/front-contract {page}`
